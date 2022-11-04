@@ -9,8 +9,9 @@ import 'package:stock_easy/db/table_define.dart';
 /// 数据库帮助类
 class DbHelper {
   DSTableDefine dsTableDefine = DSTableDefine();
+  // ThreeOneTable threeOneTable = ThreeOneTable();
 
-  ThreeOneTable threeOneTable = ThreeOneTable();
+
   HistroyFundsTable histroyFundsTable = HistroyFundsTable();
   //私有构造
   DbHelper._();
@@ -47,7 +48,14 @@ class DbHelper {
         version: 1, onCreate: (db, version) {
       // 数据库创建完成
       // 创建表 一个自增id 一个text
-      db.execute(dsTableDefine.createHistroyFundsTable());
+      db.execute(
+          dsTableDefine.createHistroyFundsTable(DSTableDefine.sanyiTable));
+      db.execute(
+          dsTableDefine.createHistroyFundsTable(DSTableDefine.changanTable));
+      db.execute(
+          dsTableDefine.createHistroyFundsTable(DSTableDefine.pinganTable));
+      db.execute(
+          dsTableDefine.createHistroyFundsTable(DSTableDefine.renbaoTable));
     }, onUpgrade: (db, oldV, newV) {
       // 升级数据库调用
       ///  db 数据库
@@ -57,7 +65,7 @@ class DbHelper {
     });
     
     histroyFundsTable.database = db;
-    threeOneTable.database = db;
+    // threeOneTable.database = db;
     return db;
   }
 

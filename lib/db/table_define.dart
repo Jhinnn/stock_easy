@@ -1,6 +1,13 @@
 class DSTableDefine {
-  static const String threeOneTable = 'threeOneTable';
+
+  static const String stockTable = 'stockTable';
+  static const String sanyiTable = 'sanyiTable';
+  static const String pinganTable = 'pinganTable';
+  static const String renbaoTable = 'renbaoTable';
+  static const String changanTable = 'changanTable';
   static const String historyFundsTable = 'historyFundsTable';
+  
+
   /*
     存储类             描述
      
@@ -15,38 +22,48 @@ class DSTableDefine {
     BLOB              值是一个 blob 数据，dart中的 Uint8List 或者 List<int> 
 
     */
-  createThreeOneTable() {
+  // createThreeOneTable() {
+  //   return '''
+  //     CREATE TABLE IF NOT EXISTS $threeOneTable (
+  //       "id"    INTEGER NOT NULL PRIMARY KEY,
+  //       "fm"    TEXT,
+  //       "h"  TEXT,
+  //       "hs" TEXT,
+  //       "lb" TEXT,
+  //       "l" TEXT,
+  //       "lt" TEXT,
+  //       "o" TEXT,
+  //       "pe" TEXT,
+  //       "pc" TEXT,
+  //       "p" TEXT,
+  //       "sz" TEXT,
+  //       "cje" TEXT,
+  //       "ud" TEXT,
+  //       "v" TEXT,
+  //       "yc" TEXT,
+  //       "zf" TEXT,
+  //       "zs" TEXT,
+  //       "sjl" TEXT,
+  //        "zdf60" TEXT,
+  //       "zdfnc" TEXT,
+  //       "t" TEXT
+  //     );
+  //     ''';
+  // }
+
+  createStockTable() {
     return '''
-      CREATE TABLE IF NOT EXISTS $threeOneTable (
-        "id"    INTEGER NOT NULL PRIMARY KEY,
-        "fm"    TEXT,
-        "h"  TEXT,
-        "hs" TEXT,
-        "lb" TEXT,
-        "l" TEXT,
-        "lt" TEXT,
-        "o" TEXT,
-        "pe" TEXT,
-        "pc" TEXT,
-        "p" TEXT,
-        "sz" TEXT,
-        "cje" TEXT,
-        "ud" TEXT,
-        "v" TEXT,
-        "yc" TEXT,
-        "zf" TEXT,
-        "zs" TEXT,
-        "sjl" TEXT,
-         "zdf60" TEXT,
-        "zdfnc" TEXT,
-        "t" TEXT
+      CREATE TABLE IF NOT EXISTS $stockTable (
+        "id" INTEGER NOT NULL PRIMARY KEY,
+        "name"  TEXT,
+        "code"  TEXT,
       );
       ''';
   }
 
-  createHistroyFundsTable() {
+  createHistroyFundsTable(String tableName) {
     return '''
-      CREATE TABLE IF NOT EXISTS $historyFundsTable (
+      CREATE TABLE IF NOT EXISTS $tableName (
         "id" INTEGER NOT NULL PRIMARY KEY,
         "t"  TEXT,
         "c"  TEXT,

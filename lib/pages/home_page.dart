@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:stock_easy/controller/tab_controller.dart';
 import 'package:stock_easy/db/db_helper.dart';
+import 'package:stock_easy/db/table_define.dart';
 import 'package:stock_easy/lib/const.dart';
 import 'package:stock_easy/models/fund/funds_model.dart';
 import 'package:stock_easy/models/histroy_model.dart';
@@ -25,122 +28,142 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<MainFundsModel> mfList = [];
   List<FundsModel> mfiList = [];
+
+  List<String> tables = [
+    DSTableDefine.sanyiTable,
+    DSTableDefine.pinganTable,
+    DSTableDefine.changanTable,
+    DSTableDefine.renbaoTable
+  ];
+
+  List<String> codeList = [
+    CodeString.sanyiString,
+    CodeString.pinganString,
+    CodeString.changanString,
+    CodeString.renbaoString
+  ];
   List<HistroyModel> histroyList = [];
 
   int _index = 0;
+
   @override
   void initState() {
     // TODO: implement initState
+    super.initState();
 
-    getStockData();
+    generateStream(tables).listen((List<HistroyModel> event) {
+      print(event.length);
+    }, onDone: () {
+      setState(() {});
+    });
   }
 
-  getStockData() async {
-    // await getMFData();
-    // await getFData();
-    await getHistroyData();
-    // setState(() {});
+  Stream<List<HistroyModel>> generateStream(List<String> tables) async* {
+    for (int i = 0; i < tables.length; i++) {
+      List<HistroyModel> histroyModelList =
+          await DbHelper.instance.histroyFundsTable.query(tables[i]);
+      List<HistroyModel> updateList =
+          await updateStockData(histroyModelList, tables[i], codeList[i]);
+      yield updateList;
+    }
   }
 
-  getMFData() async {
-    MFModel mfModel = await Api.fetchMainFundsData(CodeString.sanyiString);
-    mfList = mfModel.mainFundsModel;
-  }
-
-  getFData() async {
-    FModel mfModel = await Api.fetchFundsData(CodeString.sanyiString);
-    mfiList = mfModel.fundsModel;
-  }
-
-  getHistroyData() async {
-    //判断数据库是否是最新的
-    List<HistroyModel> dbHistroyModelList =
-        await DbHelper.instance.histroyFundsTable.query();
-    if (dbHistroyModelList.isEmpty) {
-      print('需要请求数据');
-      HisModel mfModel = await Api.fetchHistroyData(CodeString.sanyiString);
-      histroyList = mfModel.histroyModel;
-      updateTable(mfModel.histroyModel, dbHistroyModelList);
+  Future<List<HistroyModel>> updateStockData(
+      List<HistroyModel> histroyModelList,
+      String tableName,
+      String code) async {
+    if (histroyModelList.isEmpty) {
+      HisModel mfModel = await Api.fetchHistroyData(code);
+      for (HistroyModel element in mfModel.histroyModel) {
+        DbHelper.instance.histroyFundsTable.insertData(element, tableName);
+      }
+      print('需要更新');
+      return mfModel.histroyModel;
     } else {
-      HistroyModel histroyModel = dbHistroyModelList.first;
+      HistroyModel histroyModel = histroyModelList.first;
       DateTime dateTime = DateTime.parse(histroyModel.t);
       Duration duration = DateTime.now().difference(dateTime);
       if (duration.inDays >= 2) {
-        print('需要更新最新数据');
-        HisModel mfModel = await Api.fetchHistroyData(CodeString.sanyiString);
-        histroyList = mfModel.histroyModel;
-        updateTable(mfModel.histroyModel, dbHistroyModelList);
+        HisModel mfModel = await Api.fetchHistroyData(code);
+        List<String> timeList = histroyModelList.map((e) => e.t).toList();
+        for (HistroyModel histroyModel in mfModel.histroyModel) {
+          if (!timeList.contains(histroyModel.t)) {
+            DbHelper.instance.histroyFundsTable
+                .insertData(histroyModel, tableName);
+          }
+        }
+        print('需要更新');
+        return mfModel.histroyModel;
       } else {
-        print('无需更新最新数据');
-        histroyList = dbHistroyModelList;
-        setState(() {});
+        print('无需更新');
+        return histroyModelList;
       }
     }
   }
 
-  updateTable(List<HistroyModel> histroyList,
-      List<HistroyModel> dbHistroyModelList) async {
-    List<String> timeList = dbHistroyModelList.map((e) => e.t).toList();
+  // getMFData() async {
+  //   MFModel mfModel = await Api.fetchMainFundsData(CodeString.sanyiString);
+  //   mfList = mfModel.mainFundsModel;
+  // }
 
-    for (HistroyModel histroyModel in histroyList) {
-      if (!timeList.contains(histroyModel.t)) {
-        await DbHelper.instance.histroyFundsTable.insertData(histroyModel);
-      }
-    }
-    setState(() {});
-  }
+  // getFData() async {
+  //   FModel mfModel = await Api.fetchFundsData(CodeString.sanyiString);
+  //   mfiList = mfModel.fundsModel;
+  // }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        // backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          title: ToggleSwitch(
-            minHeight: 30,
-            minWidth: 60,
-            fontSize: 14.0,
-            initialLabelIndex: _index,
-            activeBgColor: const [Colors.green],
-            activeFgColor: Colors.white,
-            inactiveBgColor: Colors.grey,
-            inactiveFgColor: Colors.grey[900],
-            totalSwitches: 2,
-            labels: const ['Chart', 'Data'],
-            onToggle: (index) {
-              setState(() {
-                _index = index!;
-              });
-            },
-          ),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.only(top: 20),
-          child: IndexedStack(
-            index: _index,
-            children: [
-              histroyList.isNotEmpty
-                  ? HistroyFundsLineChartPage(
-                      histroyList: histroyList,
-                    )
-                  : Container(),
-              Row(
-                children: [
-                  const MenuWidget(),
-                  const SizedBox(
-                    width: 8,
-                  ),
-                  Expanded(
-                      child: ContentWidget(
-                    mFList: mfList,
-                    mfiList: mfiList,
-                    histroyList: histroyList,
-                  ))
-                ],
-              )
-            ],
-          ),
-        ));
+    return Container();
+    //   return Scaffold(
+    //       // backgroundColor: Colors.black,
+    //       appBar: AppBar(
+    //         backgroundColor: Colors.black,
+    //         title: ToggleSwitch(
+    //           minHeight: 30,
+    //           minWidth: 60,
+    //           fontSize: 14.0,
+    //           initialLabelIndex: _index,
+    //           activeBgColor: const [Colors.green],
+    //           activeFgColor: Colors.white,
+    //           inactiveBgColor: Colors.grey,
+    //           inactiveFgColor: Colors.grey[900],
+    //           totalSwitches: 2,
+    //           labels: const ['Chart', 'Data'],
+    //           onToggle: (index) {
+    //             setState(() {
+    //               _index = index!;
+    //             });
+    //           },
+    //         ),
+    //       ),
+    //       body: Padding(
+    //         padding: const EdgeInsets.only(top: 20),
+    //         child: IndexedStack(
+    //           index: _index,
+    //           children: [
+    //             histroyList.isNotEmpty
+    //                 ? HistroyFundsLineChartPage(
+    //                     histroyList: histroyList,
+    //                   )
+    //                 : Container(),
+    //             Row(
+    //               children: [
+    //                 const MenuWidget(),
+    //                 const SizedBox(
+    //                   width: 8,
+    //                 ),
+    //                 Expanded(
+    //                     child: ContentWidget(
+    //                   mFList: mfList,
+    //                   mfiList: mfiList,
+    //                   histroyList: histroyList,
+    //                 ))
+    //               ],
+    //             )
+    //           ],
+    //         ),
+    //       ));
+    // }
   }
 }
 
