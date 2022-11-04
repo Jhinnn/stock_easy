@@ -45,7 +45,7 @@ class Api {
   //http://api.mairui.club/hsmy/lscj/600031/b887d4403688d5e65a
   static Future<HisModel> fetchHistroyData(String code) async {
     //http://api.mairui.club/hszbl/fsjy/600031/dh/b887d4403688d5e65a
-    // http://api.mairui.club/hsmy/zlzj/600031/b887d4403688d5e65a
+    // http://api.mairui.club/hsmy/lscj/600031/b887d4403688d5e65a
     var data = await Dio()
         .get('http://api.mairui.club/hsmy/lscj/$code/${CodeString.stockKey}');
     HisModel histroyModel = HisModel.fromJson(data.data);

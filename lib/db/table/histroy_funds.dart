@@ -13,15 +13,8 @@ class HistroyFundsTable extends TableOperation {
   }
 
   insertData(HistroyModel histroyModel) async {
-    List<Map<String, Object?>> data = await dDatabase.query(
-        DSTableDefine.historyFundsTable,
-        where: 't = ?',
-        whereArgs: [histroyModel.t]);
-    if (data.isEmpty) {
-      await dDatabase.insert(
+    await dDatabase.insert(
           DSTableDefine.historyFundsTable, histroyModel.toJson(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-    }
-    
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }

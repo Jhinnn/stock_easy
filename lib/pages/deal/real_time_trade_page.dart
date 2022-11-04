@@ -12,6 +12,12 @@ class RealTimeTradePage extends StatefulWidget {
 
 class _RealTimeTradePageState extends State<RealTimeTradePage> {
   List<RealTimeTradeModel> realTimeTradeModelList = [];
+  List<String> codeList = [
+    CodeString.sanyiString,
+    CodeString.pinganString,
+    CodeString.changanString,
+    CodeString.renbaoString
+  ];
   @override
   void initState() {
     // TODO: implement initState
@@ -21,14 +27,37 @@ class _RealTimeTradePageState extends State<RealTimeTradePage> {
   }
 
   getRealTimeTrade() async {
-    RealTimeTradeModel realTimeTradeModel =
-        await Api.fetchRealTimeTradeData(CodeString.sanyiString);
-    realTimeTradeModelList.add(realTimeTradeModel);
-    print(realTimeTradeModel);
+    for (String code in codeList) {
+      RealTimeTradeModel realTimeTradeModel =
+          await Api.fetchRealTimeTradeData(code);
+      realTimeTradeModelList.add(realTimeTradeModel);
+    }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Scaffold(
+        body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: realTimeTradeModelList
+            .map((e) => Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(e.p),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Text('${e.pc}%'),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Text(e.v)
+                  ],
+                ))
+            .toList(),
+      ),
+    ));
   }
 }

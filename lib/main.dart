@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:get/route_manager.dart';
 import 'package:stock_easy/db/db_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:stock_easy/pages/deal/real_time_trade_page.dart';
 import 'package:stock_easy/pages/home_page.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
       title: '',
       theme: ThemeData(primarySwatch: Colors.blue, fontFamily: 'yzz'),
       home: const HomePage(),
+      
     );
   }
 }

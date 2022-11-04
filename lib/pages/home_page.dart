@@ -6,6 +6,7 @@ import 'package:stock_easy/models/histroy_model.dart';
 import 'package:stock_easy/models/main_funds_model.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:stock_easy/pages/deal/real_time_trade_page.dart';
 import 'package:stock_easy/pages/fouds/funds_flow_into_page.dart';
 import 'package:stock_easy/pages/fouds/histroy_funds_page.dart';
 import 'package:stock_easy/pages/fouds/main_funds_page.dart';
@@ -38,7 +39,7 @@ class _HomePageState extends State<HomePage> {
     // await getMFData();
     // await getFData();
     await getHistroyData();
-    setState(() {});
+    // setState(() {});
   }
 
   getMFData() async {
@@ -55,25 +56,37 @@ class _HomePageState extends State<HomePage> {
     //判断数据库是否是最新的
     List<HistroyModel> dbHistroyModelList =
         await DbHelper.instance.histroyFundsTable.query();
-    HistroyModel histroyModel = dbHistroyModelList.first;
-    DateTime dateTime = DateTime.parse(histroyModel.t);
-    Duration duration = DateTime.now().difference(dateTime);
-    if (duration.inDays >= 2) {
-      print('需要更新最新数据');
+    if (dbHistroyModelList.isEmpty) {
+      print('需要请求数据');
       HisModel mfModel = await Api.fetchHistroyData(CodeString.sanyiString);
-      insertIntoTable(mfModel.histroyModel);
+      histroyList = mfModel.histroyModel;
+      updateTable(mfModel.histroyModel, dbHistroyModelList);
     } else {
-      print('无需更新最新数据');
-      histroyList = dbHistroyModelList;
-      setState(() {});
+      HistroyModel histroyModel = dbHistroyModelList.first;
+      DateTime dateTime = DateTime.parse(histroyModel.t);
+      Duration duration = DateTime.now().difference(dateTime);
+      if (duration.inDays >= 2) {
+        print('需要更新最新数据');
+        HisModel mfModel = await Api.fetchHistroyData(CodeString.sanyiString);
+        histroyList = mfModel.histroyModel;
+        updateTable(mfModel.histroyModel, dbHistroyModelList);
+      } else {
+        print('无需更新最新数据');
+        histroyList = dbHistroyModelList;
+        setState(() {});
+      }
     }
   }
 
-  insertIntoTable(List<HistroyModel> histroyList) async {
+  updateTable(List<HistroyModel> histroyList,
+      List<HistroyModel> dbHistroyModelList) async {
+    List<String> timeList = dbHistroyModelList.map((e) => e.t).toList();
+
     for (HistroyModel histroyModel in histroyList) {
-      await DbHelper.instance.histroyFundsTable.insertData(histroyModel);
+      if (!timeList.contains(histroyModel.t)) {
+        await DbHelper.instance.histroyFundsTable.insertData(histroyModel);
+      }
     }
-    histroyList = await DbHelper.instance.histroyFundsTable.query();
     setState(() {});
   }
 
@@ -136,7 +149,7 @@ class MenuWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    TextStyle textStyle = const TextStyle(color: Colors.white, fontSize: 10);
+    TextStyle textStyle = const TextStyle(color: Colors.black, fontSize: 10);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -144,15 +157,20 @@ class MenuWidget extends StatelessWidget {
             onPressed: () {
               Get.find<TabIndexController>().setIndex(0);
             },
-            child: Text('主力资金走势', style: textStyle)),
+            child: Text('实时数据', style: textStyle)),
         TextButton(
             onPressed: () {
               Get.find<TabIndexController>().setIndex(1);
             },
-            child: Text('资金流入趋势', style: textStyle)),
+            child: Text('主力资金走势', style: textStyle)),
         TextButton(
             onPressed: () {
               Get.find<TabIndexController>().setIndex(2);
+            },
+            child: Text('资金流入趋势', style: textStyle)),
+        TextButton(
+            onPressed: () {
+              Get.find<TabIndexController>().setIndex(3);
             },
             child: Text('历史成交分布', style: textStyle))
       ],
@@ -180,6 +198,7 @@ class ContentWidget extends StatelessWidget {
           return IndexedStack(
             index: logic.index,
             children: [
+              const RealTimeTradePage(),
               MainFundsPage(mFList: mFList),
               FundsFlowIntoPage(mFList: mfiList),
               HistroyFundsPage(histroyList: histroyList),
